@@ -1,0 +1,235 @@
+<script lang="ts">
+    export let product: any;
+
+    let currentImageIndex = 0;
+
+    $: images = product.images || [];
+    $: currentImage = images.length > 0 ? images[currentImageIndex] : null;
+
+    const nextImage = () => {
+        if (images.length > 1) {
+            currentImageIndex = (currentImageIndex + 1) % images.length;
+        }
+    };
+
+    const prevImage = () => {
+        if (images.length > 1) {
+            currentImageIndex =
+                (currentImageIndex - 1 + images.length) % images.length;
+        }
+    };
+</script>
+
+<li class="product-card">
+    <div class="image-container">
+        {#if currentImage}
+            <img
+                src={currentImage.url}
+                alt={product.title}
+                class="product-image"
+            />
+            {#if images.length > 1}
+                <button class="nav-btn prev" on:click={prevImage}>&lt;</button>
+                <button class="nav-btn next" on:click={nextImage}>&gt;</button>
+                <div class="dots">
+                    {#each images as _, i}
+                        <span class="dot" class:active={i === currentImageIndex}
+                        ></span>
+                    {/each}
+                </div>
+            {/if}
+        {:else}
+            <div class="no-image">No Image</div>
+        {/if}
+    </div>
+
+    <div class="product-info">
+        <h2 class="product-title">{product.title}</h2>
+        <p class="product-description">{product.description}</p>
+
+        <div class="product-variants">
+            <h3>Variations</h3>
+            <div class="variant-buttons">
+                {#each product.variants as variant}
+                    <button class="variant-btn">
+                        <span class="variant-title">{variant.title}</span>
+                        {#if variant.prices && variant.prices.length > 0}
+                            <span class="variant-price">
+                                {variant.prices[0].amount / 100}
+                                {variant.prices[0].currency_code.toUpperCase()}
+                            </span>
+                        {/if}
+                    </button>
+                {/each}
+            </div>
+        </div>
+    </div>
+</li>
+
+<style>
+    .product-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow:
+            0 4px 6px -1px rgba(0, 0, 0, 0.1),
+            0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow:
+            0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .image-container {
+        position: relative;
+        width: 100%;
+        padding-top: 100%; /* 1:1 Aspect Ratio */
+        background-color: #f3f4f6;
+        overflow: hidden;
+    }
+
+    .product-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.3s ease;
+    }
+
+    .nav-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+        color: #333;
+        opacity: 0;
+        transition:
+            opacity 0.2s,
+            background 0.2s;
+        z-index: 2;
+    }
+
+    .image-container:hover .nav-btn {
+        opacity: 1;
+    }
+
+    .nav-btn:hover {
+        background: white;
+    }
+
+    .prev {
+        left: 10px;
+    }
+    .next {
+        right: 10px;
+    }
+
+    .dots {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+        z-index: 2;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: background 0.2s;
+    }
+
+    .dot.active {
+        background: white;
+    }
+
+    .product-info {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    .product-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .product-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+        flex-grow: 1;
+    }
+
+    .product-variants h3 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0 0 0.75rem 0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .variant-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .variant-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-width: 80px;
+    }
+
+    .variant-btn:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .variant-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .variant-price {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-top: 2px;
+    }
+</style>
