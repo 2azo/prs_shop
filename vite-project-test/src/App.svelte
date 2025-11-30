@@ -5,6 +5,7 @@
   // publishable API key
   const PUBLISHABLE_API_KEY =
     "pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea";
+    
   const API_URL = "http://localhost:9000/";
 
   // fetching products (GET /store/products)
