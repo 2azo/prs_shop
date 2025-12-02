@@ -4,15 +4,22 @@
 
   let products: any[] = [];
 
-  // creating cart when the page loads
+  // publishable API key
+  const PUBLISHABLE_API_KEY =
+    "pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea";
+  const REGION_ID = "reg_01KA94WK5BH4BEDW4GS6G49V4G";
+
+  const API_URL = "http://localhost:9000/";
+
+  // when the page loads
   onMount(() => {
     // check if cart id exists in localStorage
     let cartId = localStorage.getItem("cart_id");
     if (!cartId) {
-      // create a new cart
       createCart();
     } else {
       console.log("Cart ID found in localStorage:", cartId);
+      getCart(cartId);
     }
 
     fetchProducts();
@@ -31,21 +38,44 @@
         // store cart id in localStorage
         localStorage.setItem("cart_id", data.cart.id);
         console.log("New cart created with ID:", data.cart.id);
+        console.log(data);
       })
       .catch((error) => {
         console.error("Error creating cart:", error);
       });
   }
 
-  // publishable API key
-  const PUBLISHABLE_API_KEY =
-    "pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea";
+  function getCart(cartId: string) {
+    // curl
+    // curl '{backend_url}/store/carts/{id}' \ -H 'x-publishable-api-key: {your_publishable_api_key}'
 
-  const API_URL = "http://localhost:9000/";
+    fetch(`${API_URL}store/carts/${cartId}`, {
+      headers: {
+        "x-publishable-api-key": PUBLISHABLE_API_KEY,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Cart data:", data);
+      })
+      .catch((error) => {
+        console.error("Error fetching cart:", error);
+      });
+  }
 
-  const fetchProducts = async () => {
+  async function fetchProducts() {
+    // curl
+    // fetching products (GET /store/products) -> remember to add the storefront url to Medusa .env file (STORE CORS)
+    // curl -H "x-publishable-api-key: pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea" http://localhost:9000/store/products
+    // adding fields=*variants.calculated_price&region_id=reg_xxx to get prices
+    // curl
+    /*
+    GET /store/products?fields=*variants.calculated_price&region_id=reg_xxx
+    x-publishable-api-key: <your-publishable-key>
+    */
+
     try {
-      const response = await fetch(API_URL + "store/products", {
+      const response = await fetch(API_URL + `store/products?fields=*variants.calculated_price&region_id=${REGION_ID}`, {
         headers: {
           "x-publishable-api-key": PUBLISHABLE_API_KEY,
         },
@@ -61,12 +91,43 @@
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  };
+  }
 
-  // curl
-  // fetching products (GET /store/products) -> remember to add the storefront url to Medusa .env file (STORE CORS)
-  // curl -H "x-publishable-api-key: pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea" http://localhost:9000/store/products
-  //
+  async function updateCart(cartId: string, update: string, variantId: string) {
+
+    // adding a product to cart 
+    // POST /store/carts/{id}/line-items
+    /* 
+    curl -X POST '{backend_url}/store/carts/{id}/line-items' \
+    -H 'Content-Type: application/json' \
+    -H 'x-publishable-api-key: {your_publishable_api_key}' \
+    --data-raw '{
+      "variant_id": "{value}",
+      "quantity": 3360689747918848,
+      "metadata": {}
+    }'
+    */
+    if (update === "add") {
+      fetch(`${API_URL}store/carts/${cartId}/line-items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": PUBLISHABLE_API_KEY,
+        },
+        body: JSON.stringify({
+          variant_id: variantId,
+          quantity: 1,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Product added to cart:", data);
+        })
+        .catch((error) => {
+          console.error("Error adding product to cart:", error);
+        });
+    }
+  }
 </script>
 
 <main class="product-page">
