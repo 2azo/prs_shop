@@ -2,14 +2,47 @@
   import { onMount } from "svelte";
   import ProductCard from "./lib/ProductCard.svelte";
 
+  let products: any[] = [];
+
+  // creating cart when the page loads
+  onMount(() => {
+    // check if cart id exists in localStorage
+    let cartId = localStorage.getItem("cart_id");
+    if (!cartId) {
+      // create a new cart
+      createCart();
+    } else {
+      console.log("Cart ID found in localStorage:", cartId);
+    }
+
+    fetchProducts();
+  });
+
+  function createCart() {
+    fetch(API_URL + "store/carts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": PUBLISHABLE_API_KEY,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // store cart id in localStorage
+        localStorage.setItem("cart_id", data.cart.id);
+        console.log("New cart created with ID:", data.cart.id);
+      })
+      .catch((error) => {
+        console.error("Error creating cart:", error);
+      });
+  }
+
   // publishable API key
   const PUBLISHABLE_API_KEY =
     "pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea";
-    
+
   const API_URL = "http://localhost:9000/";
 
-  // fetching products (GET /store/products)
-  let products: any[] = [];
   const fetchProducts = async () => {
     try {
       const response = await fetch(API_URL + "store/products", {
@@ -38,7 +71,6 @@
 
 <main class="product-page">
   <h1>Produkte</h1>
-  <button class="fetch-button" on:click={fetchProducts}>Produkte holen</button>
 
   {#if products.length > 0}
     <ul class="product-list">
