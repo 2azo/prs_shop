@@ -1,5 +1,11 @@
 <script lang="ts">
   export let product: any;
+  export let updateCart: (
+    cartId: string | null,
+    update: string,
+    variantId: string
+  ) => void;
+  export let cartId: string | null;
   console.log("Product in ProductCard:", product);
 
   let currentImageIndex = 0;
@@ -93,7 +99,12 @@
     </div>
 
     <div class="add-to-cart">
-      <button disabled={!selectedVariantId}> In den Warenkorb </button>
+      <button
+        disabled={!selectedVariantId}
+        on:click={() => updateCart(cartId, "add", selectedVariantId!)}
+      >
+        In den Warenkorb
+      </button>
     </div>
   </div>
 </li>
@@ -271,7 +282,8 @@
     min-width: 80px;
   }
 
-  .variant-title, .variant-price span{
+  .variant-title,
+  .variant-price span {
     font-size: 0.875rem;
     font-weight: 500;
     color: #374151;

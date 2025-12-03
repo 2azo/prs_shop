@@ -11,10 +11,12 @@
 
   const API_URL = "http://localhost:9000/";
 
+  let cartId: string | null = null;
+
   // when the page loads
   onMount(() => {
     // check if cart id exists in localStorage
-    let cartId = localStorage.getItem("cart_id");
+    cartId = localStorage.getItem("cart_id");
     if (!cartId) {
       createCart();
     } else {
@@ -37,6 +39,7 @@
       .then((data) => {
         // store cart id in localStorage
         localStorage.setItem("cart_id", data.cart.id);
+        cartId = data.cart.id;
         console.log("New cart created with ID:", data.cart.id);
         console.log(data);
       })
@@ -75,11 +78,15 @@
     */
 
     try {
-      const response = await fetch(API_URL + `store/products?fields=*variants.calculated_price&region_id=${REGION_ID}`, {
-        headers: {
-          "x-publishable-api-key": PUBLISHABLE_API_KEY,
-        },
-      });
+      const response = await fetch(
+        API_URL +
+          `store/products?fields=*variants.calculated_price&region_id=${REGION_ID}`,
+        {
+          headers: {
+            "x-publishable-api-key": PUBLISHABLE_API_KEY,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -93,9 +100,12 @@
     }
   }
 
-  async function updateCart(cartId: string, update: string, variantId: string) {
-
-    // adding a product to cart 
+  async function updateCart(
+    cartId: string | null,
+    update: string,
+    variantId: string
+  ) {
+    // adding a product to cart
     // POST /store/carts/{id}/line-items
     /* 
     curl -X POST '{backend_url}/store/carts/{id}/line-items' \
@@ -107,6 +117,10 @@
       "metadata": {}
     }'
     */
+    if (!cartId) {
+      console.error("No cart ID provided.");
+      return;
+    }
     if (update === "add") {
       fetch(`${API_URL}store/carts/${cartId}/line-items`, {
         method: "POST",
@@ -133,15 +147,22 @@
 <main class="product-page">
   <h1>Produkte</h1>
 
-  {#if products.length > 0}
+  {#if products.length > 0 && cartId}
     <ul class="product-list">
       {#each products as product}
-        <ProductCard {product} />
+        <ProductCard 
+        product={product}
+        updateCart={updateCart}
+        cartId={cartId}
+        />
       {/each}
     </ul>
   {:else}
-    <p class="no-products">Keine Produkte gefunden.</p>
+    <p class="no-products">Keine Produkte oder Warenkorb gefunden.</p>
   {/if}
+
+  <!-- <h1>Summe</h1> -->
+
 </main>
 
 <style>
