@@ -105,20 +105,9 @@
   async function updateCart(
     cartId: string | null,
     update: string,
-    variantId: string
+    variantId: string,
+    itemId?: string
   ) {
-    // adding a product to cart
-    // POST /store/carts/{id}/line-items
-    /* 
-    curl -X POST '{backend_url}/store/carts/{id}/line-items' \
-    -H 'Content-Type: application/json' \
-    -H 'x-publishable-api-key: {your_publishable_api_key}' \
-    --data-raw '{
-      "variant_id": "{value}",
-      "quantity": 3360689747918848,
-      "metadata": {}
-    }'
-    */
     if (!cartId) {
       console.error("No cart ID provided.");
       return;
@@ -143,6 +132,45 @@
         .catch((error) => {
           console.error("Error adding product to cart:", error);
         });
+    } else if (update === "remove") {
+      // curl - remove one quantity of a line item from cart
+      /*
+      curl -X POST '{backend_url}/store/carts/{id}/line-items/{line_id}' \
+      -H 'Content-Type: application/json' \
+      -H 'x-publishable-api-key: {your_publishable_api_key}' \
+      --data-raw '{
+        "quantity": 8980402259623936,
+        "metadata": {}
+      }'
+      */
+      let quantity = cart.items.find(
+        (item: any) => item.variant_id === variantId
+      )?.quantity;
+
+      console.log("Current quantity of item to remove:", quantity);
+      if (!quantity || quantity <= 0) {
+        console.error("Item not found in cart or quantity is zero.");
+        return;
+      }
+
+      fetch(`${API_URL}store/carts/${cartId}/line-items/${itemId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": PUBLISHABLE_API_KEY,
+        },
+        body: JSON.stringify({
+          "quantity": quantity-1
+        }), 
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          cart = data.cart;
+          console.log("Product removed from cart:", data);
+        })
+        .catch((error) => {
+          console.error("Error removing product from cart:", error);
+        });
     }
   }
 </script>
@@ -166,7 +194,15 @@
     {#if cart}
       <ul>
         {#each cart.items as item}
-          <li>{item.title} {item.variant_title} - Menge: {item.quantity}</li>
+          <li>
+            {item.title}
+            {item.variant_title} - Menge: {item.quantity}
+            <button
+              on:click={() => updateCart(cartId, "remove", item.variant_id, item.id)}
+            >
+              Entfernen
+            </button>
+          </li>
         {/each}
       </ul>
       <p>Gesamt: {cart.total} {cart.currency_code.toUpperCase()}</p>
