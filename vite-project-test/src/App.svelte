@@ -12,6 +12,7 @@
   const API_URL = "http://localhost:9000/";
 
   let cartId: string | null = null;
+  let cart: any = null;
 
   // when the page loads
   onMount(() => {
@@ -59,7 +60,8 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Cart data:", data);
+        cart = data.cart;
+        console.log("Cart data:", cart);
       })
       .catch((error) => {
         console.error("Error fetching cart:", error);
@@ -94,7 +96,7 @@
 
       const data = await response.json();
       products = data.products;
-      console.log(products);
+      // console.log(products);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -135,6 +137,7 @@
       })
         .then((response) => response.json())
         .then((data) => {
+          cart = data.cart;
           console.log("Product added to cart:", data);
         })
         .catch((error) => {
@@ -150,22 +153,38 @@
   {#if products.length > 0 && cartId}
     <ul class="product-list">
       {#each products as product}
-        <ProductCard 
-        product={product}
-        updateCart={updateCart}
-        cartId={cartId}
-        />
+        <ProductCard {product} {updateCart} {cartId} />
       {/each}
     </ul>
   {:else}
     <p class="no-products">Keine Produkte oder Warenkorb gefunden.</p>
   {/if}
 
-  <!-- <h1>Summe</h1> -->
-
+  <div class="cart-summary">
+    <h2>Warenkorb</h2>
+    <h2>Produkte</h2>
+    {#if cart}
+      <ul>
+        {#each cart.items as item}
+          <li>{item.title} {item.variant_title} - Menge: {item.quantity}</li>
+        {/each}
+      </ul>
+      <p>Gesamt: {cart.total} {cart.currency_code.toUpperCase()}</p>
+    {:else}
+      <p>Warenkorb ist leer.</p>
+    {/if}
+  </div>
 </main>
 
 <style>
+  .cart-summary {
+    margin-top: 3rem;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+  }
+
   .product-page {
     max-width: 1200px;
     margin: 0 auto;

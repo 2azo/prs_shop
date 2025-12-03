@@ -6,7 +6,7 @@
     variantId: string
   ) => void;
   export let cartId: string | null;
-  console.log("Product in ProductCard:", product);
+//   console.log("Product in ProductCard:", product);
 
   let currentImageIndex = 0;
 
