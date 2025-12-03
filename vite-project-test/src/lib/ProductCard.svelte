@@ -100,7 +100,8 @@
     <div class="add-to-cart">
       <button
         disabled={!selectedVariantId}
-        on:click={() => updateCart(cartId, "add", selectedVariantId!)}
+        on:click={() =>
+          updateCart({ cartId, action: "add", variantId: selectedVariantId! })}
       >
         In den Warenkorb
       </button>

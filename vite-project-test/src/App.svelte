@@ -110,7 +110,8 @@
     action,
     variantId,
     itemId,
-    addressData,
+    billingAddress,
+    shippingAddress,
   }: UpdateCartParams) {
     if (!cartId) {
       console.error("No cart ID provided.");
@@ -177,45 +178,90 @@
           console.error("Error removing product from cart:", error);
         });
     } else if (action === "update_addresses") {
-      fetch(`${API_URL}store/carts/${cartId}/line-items/${itemId}`, {
+      let bodyData: any = {};
+
+      if (
+        !email ||
+        !firstName ||
+        !lastName ||
+        !billingAddress?.street ||
+        !billingAddress?.streetNumber ||
+        !billingAddress?.city ||
+        !billingAddress?.postalCode ||
+        !billingAddress?.country
+      ) {
+        console.error("please fill in all required address fields");
+        return;
+      }
+
+      if (billingAddress) {
+        // bodyData.billing_address = billingAddress;
+        bodyData.billing_address = {};
+        if (
+          billingAddress.country.toLowerCase() == "germany" ||
+          billingAddress.country.toLowerCase() == "de" ||
+          billingAddress.country.toLowerCase() == "deutschland"
+        ) {
+          bodyData.billing_address.country_code = "de";
+          // bodyData.billing_address.country = "Deutschland";
+        } else {
+          alert("Nur Deutschland wird unterstützt.");
+        }
+
+        bodyData.billing_address.company = billingAddress.companyName;
+        bodyData.billing_address.first_name = firstName;
+        bodyData.billing_address.last_name = lastName;
+        bodyData.billing_address.address_1 =
+          billingAddress.street +
+          " " +
+          billingAddress.streetNumber +
+          ", " +
+          billingAddress.city +
+          ", " +
+          billingAddress.postalCode +
+          ", " +
+          billingAddress.country;
+        bodyData.billing_address.city = billingAddress.city;
+        bodyData.billing_address.postal_code = billingAddress.postalCode;
+      }
+      if (shippingAddress) {
+        // bodyData.shipping_address = shippingAddress;
+      }
+
+      bodyData.email = email;
+
+      console.log("Updating cart with address data:", bodyData);
+      // return;
+
+      fetch(`${API_URL}store/carts/${cartId}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-publishable-api-key": PUBLISHABLE_API_KEY,
         },
         body: JSON.stringify({
-          email: addressData?.email,
-          billing_address: {
-            street: addressData?.street,
-            street_number: addressData?.streetNumber,
-            city: addressData?.city,
-            postal_code: addressData?.postalCode,
-            country: addressData?.country,
-          },
+          ...bodyData,
         }),
       })
         .then((response) => response.json())
         .then((data) => {
           cart = data.cart;
-          console.log("Product removed from cart:", data);
+          console.log("cart updated - checkout info", data);
         })
         .catch((error) => {
-          console.error("Error removing product from cart:", error);
+          console.error("Error updating cart with address data:", error);
         });
     }
   }
 
-  let name: string = "";
+  let firstName: string = "";
+  let lastName: string = "";
   let email: string = "";
-  let street: string = "";
-  let streetNumber: string = "";
-  let city: string = "";
-  let postalCode: string = "";
-  let country: string = "";
   let phone: string = "";
   let sameAddress: boolean = true;
 
   let billingAddress = {
+    companyName: "",
     street: "",
     streetNumber: "",
     city: "",
@@ -225,6 +271,7 @@
   };
 
   let shippingAddress = {
+    companyName: "",
     street: "",
     streetNumber: "",
     city: "",
@@ -235,16 +282,68 @@
 
   async function formHandleSubmit() {
     console.log("Billing Address:", billingAddress);
+    const missing = [];
+
+    if (!firstName) missing.push("First name");
+    if (!lastName) missing.push("Last name");
+    if (!email) missing.push("Email");
+    if (!billingAddress.street) missing.push("Street");
+    if (
+      !billingAddress.streetNumber ||
+      isNaN(Number(billingAddress.streetNumber)) ||
+      Number(billingAddress.streetNumber) <= 0 ||
+      Number(billingAddress.streetNumber) % 1 !== 0 ||
+      Number(billingAddress.streetNumber) > 10000
+    )
+      missing.push("Street number");
+    if (!billingAddress.city) missing.push("City");
+    if (!billingAddress.postalCode) missing.push("Postal code");
+    if (!billingAddress.country) missing.push("Country");
+
+    if (missing.length > 0) {
+      alert("Please check the following fields: " + missing.join(", "));
+      return;
+    }
     if (!sameAddress) {
       console.log("Shipping Address:", shippingAddress);
     }
     console.log("Form submitted");
-    updateCart({
-      cartId: cartId,
-      action: "update_addresses",
-      variantId: "",
-      itemId: undefined,
-    });
+    if (sameAddress) {
+      updateCart({
+        cartId: cartId,
+        action: "update_addresses",
+        billingAddress: {
+          companyName: billingAddress.companyName,
+          street: billingAddress.street,
+          streetNumber: billingAddress.streetNumber,
+          city: billingAddress.city,
+          postalCode: billingAddress.postalCode,
+          country: billingAddress.country,
+          phone: billingAddress.phone,
+        },
+      });
+    } else {
+      updateCart({
+        cartId: cartId,
+        action: "update_addresses",
+        billingAddress: {
+          street: billingAddress.street,
+          streetNumber: billingAddress.streetNumber,
+          city: billingAddress.city,
+          postalCode: billingAddress.postalCode,
+          country: billingAddress.country,
+          phone: billingAddress.phone,
+        },
+        shippingAddress: {
+          street: shippingAddress.street,
+          streetNumber: shippingAddress.streetNumber,
+          city: shippingAddress.city,
+          postalCode: shippingAddress.postalCode,
+          country: shippingAddress.country,
+          phone: shippingAddress.phone,
+        },
+      });
+    }
   }
 </script>
 
@@ -311,10 +410,13 @@
         <h2>Checkout Information</h2>
 
         <form on:submit|preventDefault={formHandleSubmit}>
-          <label for="name">Name</label>
-          <input type="text" id="name" bind:value={name} />
+          <label for="first-name" aria-required="true">Vorname</label>
+          <input type="text" id="first-name" bind:value={firstName} />
 
-          <label for="email">Email</label>
+          <label for="last-name" aria-required="true">Nachname</label>
+          <input type="text" id="last-name" bind:value={lastName} />
+
+          <label for="email" aria-required="true">Email</label>
           <input type="email" id="email" bind:value={email} />
 
           <label for="phone">Telefonnummer</label>
@@ -327,42 +429,65 @@
           >
           <input type="checkbox" id="same-address" bind:checked={sameAddress} />
 
-          <label for="billing-street">Straße</label>
+          <label for="billing-company-name">Firmenname</label>
+          <input
+            type="text"
+            id="billing-company-name"
+            bind:value={billingAddress.companyName}
+            placeholder=""
+          />
+
+          <label for="billing-street" aria-required="true">Straße</label>
           <input
             type="text"
             id="billing-street"
+            aria-required="true"
             bind:value={billingAddress.street}
           />
 
-          <label for="billing-street-number">Hausnummer</label>
+          <label for="billing-street-number" aria-required="true"
+            >Hausnummer</label
+          >
           <input
-            type="text"
+            type="number"
             id="billing-street-number"
+            aria-required="true"
             bind:value={billingAddress.streetNumber}
           />
-          <label for="billing-city">Stadt</label>
+          <label for="billing-city" aria-required="true">Stadt</label>
           <input
             type="text"
             id="billing-city"
+            aria-required="true"
             bind:value={billingAddress.city}
           />
 
-          <label for="billing-postal-code">Postleitzahl</label>
+          <label for="billing-postal-code" aria-required="true"
+            >Postleitzahl</label
+          >
           <input
             type="text"
             id="billing-postal-code"
+            aria-required="true"
             bind:value={billingAddress.postalCode}
           />
 
-          <label for="billing-country">Land</label>
+          <label for="billing-country" aria-required="true">Land</label>
           <input
             type="text"
             id="billing-country"
+            aria-required="true"
             bind:value={billingAddress.country}
           />
 
           {#if !sameAddress}
             <h3>Lieferadresse</h3>
+            <label for="shipping-company-name">Firmenname</label>
+            <input
+              type="text"
+              id="shipping-company-name"
+              bind:value={shippingAddress.companyName}
+            />
             <label for="shipping-street">Straße</label>
             <input
               type="text"
@@ -421,6 +546,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  label[aria-required="true"]::after {
+    content: " *";
+    color: red;
   }
 
   .modal-backdrop label {
