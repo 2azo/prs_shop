@@ -1,12 +1,11 @@
 <script lang="ts">
+  import type { Update } from "vite/types/hmrPayload.js";
+  import type { UpdateCartParams } from "../main";
+
   export let product: any;
-  export let updateCart: (
-    cartId: string | null,
-    update: string,
-    variantId: string
-  ) => void;
+  export let updateCart: (params: UpdateCartParams) => void;
   export let cartId: string | null;
-//   console.log("Product in ProductCard:", product);
+  //   console.log("Product in ProductCard:", product);
 
   let currentImageIndex = 0;
 
