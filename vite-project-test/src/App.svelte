@@ -5,12 +5,17 @@
 
   let products: any[] = [];
 
-  // publishable API key
+  // publishable API key - Medusa
   const PUBLISHABLE_API_KEY =
     "pk_509af7b91928fbd1c56284869f0785d39c3287df5c9aa755b2543ed55cc8c0ea";
   const REGION_ID = "reg_01KA94WK5BH4BEDW4GS6G49V4G";
 
+  // path to backend server - Medusa
   const API_URL = "http://localhost:9000/";
+
+  // Stripe public key
+  const STRIPE_PUBLIC_KEY =
+    "pk_test_51SaNuj4tfJBc4SjuVHvVgMXBnJP8uFW1h0GNvmiyPhGeINwKJXoKL5CdEAK1CdIaUSEHDqfONOdEs6M78GMx4wG3004ZUdxQRS";
 
   let cartId: string | null = null;
   let cart: any = null;
@@ -645,24 +650,6 @@
     text-align: center;
     color: #111827;
     margin-bottom: 2rem;
-  }
-
-  .fetch-button {
-    display: block;
-    margin: 0 auto 2rem;
-    padding: 0.75rem 1.5rem;
-    background-color: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .fetch-button:hover {
-    background-color: #2563eb;
   }
 
   .product-list {
