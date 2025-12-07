@@ -21,6 +21,8 @@
 
   let cartId: string | null = null;
   let cart: any = null;
+  let paymentCollectionId: string | null = null;
+  let clientSecret: string | null = null;
 
   let showModal = false;
   let loading = false;
@@ -117,6 +119,9 @@
       .then((response) => response.json())
       .then((data) => {
         console.log("Payment collection created:", data);
+        paymentCollectionId = data.payment_collection.id;
+        console.log("Payment Collection ID:", data.payment_collection.id);
+        initializePaymentSession();
       })
       .catch((error) => {
         console.error("Error creating payment collection:", error);
@@ -126,8 +131,41 @@
   function initializePaymentSession() {
     // curl
     /*
-    
+    curl -X POST '{backend_url}/store/payment-collections/{id}/payment-sessions' \
+    -H 'Content-Type: application/json' \
+    -H 'x-publishable-api-key: {your_publishable_api_key}' \
+    --data-raw '{
+      "provider_id": "{value}"
+    }'
     */
+    console.log(
+      "Initializing payment session for collection ID:",
+      paymentCollectionId
+    );
+    fetch(
+      `${API_URL}store/payment-collections/${paymentCollectionId}/payment-sessions`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": PUBLISHABLE_API_KEY,
+        },
+        body: JSON.stringify({
+          provider_id: "pp_stripe_stripe",
+        }),
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Payment session initialized:", data);
+        // todo: store client secret
+        // clientSecret =
+        //   data.payment_collection.payment_collection.data.client_secret;
+        console.log("Client Secret:", clientSecret);
+      })
+      .catch((error) => {
+        console.error("Error initializing payment session:", error);
+      });
   }
 
   async function fetchProducts() {
