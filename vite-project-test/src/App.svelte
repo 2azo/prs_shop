@@ -33,13 +33,15 @@
     // check if cart id exists in localStorage
     cartId = localStorage.getItem("cart_id");
     if (!cartId) {
-      createCart();
+      await createCart();
     } else {
       console.log("Cart ID found in localStorage:", cartId);
-      getCart(cartId);
+      await getCart(cartId);
     }
 
-    fetchProducts();
+    await createPaymentCollection(cartId!);
+
+    await fetchProducts();
 
     // initialize Stripe
     const stripe = await loadStripe(STRIPE_PUBLIC_KEY);
@@ -72,7 +74,9 @@
     // curl
     // curl '{backend_url}/store/carts/{id}' \ -H 'x-publishable-api-key: {your_publishable_api_key}'
 
-    fetch(`${API_URL}store/carts/${cartId}`, {
+    // adding the method (post/get) and headers
+    fetch(`${API_URL}store/carts/${cartId}?fields=+payment_collection`, {
+      method: "GET",
       headers: {
         "x-publishable-api-key": PUBLISHABLE_API_KEY,
       },
@@ -80,11 +84,50 @@
       .then((response) => response.json())
       .then((data) => {
         cart = data.cart;
-        // console.log("Cart data:", cart);
+        console.log("Cart data:", cart);
+        console.log("cart data at a tree");
+        console.dir(data);
       })
       .catch((error) => {
         console.error("Error fetching cart:", error);
       });
+  }
+
+  function createPaymentCollection(cartId: string) {
+    // curl
+    /*
+    curl -X POST '{backend_url}/store/payment-collections' \
+    -H 'Content-Type: application/json' \
+    -H 'x-publishable-api-key: {your_publishable_api_key}' \
+    --data-raw '{
+      "cart_id": "{value}"
+    }'
+    */
+
+    fetch(`${API_URL}store/payment-collections`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-publishable-api-key": PUBLISHABLE_API_KEY,
+      },
+      body: JSON.stringify({
+        cart_id: cartId,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Payment collection created:", data);
+      })
+      .catch((error) => {
+        console.error("Error creating payment collection:", error);
+      });
+  }
+
+  function initializePaymentSession() {
+    // curl
+    /*
+    
+    */
   }
 
   async function fetchProducts() {
