@@ -17,13 +17,19 @@
   const STRIPE_PUBLIC_KEY =
     "pk_test_51SaNuj4tfJBc4SjuVHvVgMXBnJP8uFW1h0GNvmiyPhGeINwKJXoKL5CdEAK1CdIaUSEHDqfONOdEs6M78GMx4wG3004ZUdxQRS";
 
+  import { loadStripe } from "@stripe/stripe-js";
+
   let cartId: string | null = null;
   let cart: any = null;
 
   let showModal = false;
+  let loading = false;
 
   // when the page loads
-  onMount(() => {
+  onMount(async () => {
+    loading = true;
+    console.log("onMount called");
+
     // check if cart id exists in localStorage
     cartId = localStorage.getItem("cart_id");
     if (!cartId) {
@@ -34,6 +40,11 @@
     }
 
     fetchProducts();
+
+    // initialize Stripe
+    const stripe = await loadStripe(STRIPE_PUBLIC_KEY);
+    console.log("Stripe initialized:", stripe);
+    loading = false;
   });
 
   function createCart() {
@@ -534,9 +545,29 @@
       </div>
     </div>
   {/if}
+
+  {#if loading}
+    <div class="loading-backdrop">
+      <div class="loading-spinner">Lädt...</div>
+    </div>
+  {/if}
 </main>
 
 <style>
+  .loading-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+  .loading-spinner {
+    font-size: 1.5rem;
+    color: #111827;
+  }
+
   .modal-backdrop {
     position: fixed;
     inset: 0;
