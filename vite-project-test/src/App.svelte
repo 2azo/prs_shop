@@ -158,9 +158,17 @@
       .then((response) => response.json())
       .then((data) => {
         console.log("Payment session initialized:", data);
-        // todo: store client secret
-        // clientSecret =
-        //   data.payment_collection.payment_collection.data.client_secret;
+        console.log("data.payment_collection -> ", data.payment_collection);
+        console.log(
+          "data.payment_collection.payment_sessions   -> ",
+          data.payment_collection.payment_sessions
+        );
+        console.log(
+          "data.payment_collection.payment_sessions[0].data.client_secret -> ",
+          data.payment_collection.payment_sessions[0].data.client_secret
+        );
+        clientSecret =
+          data.payment_collection.payment_sessions[0].data.client_secret;
         console.log("Client Secret:", clientSecret);
       })
       .catch((error) => {
