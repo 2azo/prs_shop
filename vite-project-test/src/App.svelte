@@ -19,6 +19,8 @@
 
   import { loadStripe } from "@stripe/stripe-js";
 
+  let stripe: any = null;
+
   let cartId: string | null = null;
   let cart: any = null;
   let paymentCollectionId: string | null = null;
@@ -46,10 +48,25 @@
     await fetchProducts();
 
     // initialize Stripe
-    const stripe = await loadStripe(STRIPE_PUBLIC_KEY);
+    stripe = await loadStripe(STRIPE_PUBLIC_KEY);
     console.log("Stripe initialized:", stripe);
     loading = false;
   });
+
+  /* 
+  Checkout logic:
+    1- User clicks on "Zur Kasse gehen" button
+    2- Loading screen is displayed
+    3- Checkout modal is displayed 
+    4- User inputs personal data 
+    5- User clicks on "Weiter Zur Zahlung" -> updates card information
+    6- Loading screen is displayed
+    7- Stripe is initialized
+    8- Payment Collection is created
+    9- Payment session is initialized
+    10- Stripe UI modal is displayed
+    11- Left: Interaction between Medusa and Strip + Confirmation/Error Page display
+  */
 
   function createCart() {
     fetch(API_URL + "store/carts", {
