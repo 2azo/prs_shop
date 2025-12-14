@@ -29,7 +29,6 @@
   let showModal = false;
   let loading = false;
 
-  // when the page loads
   onMount(async () => {
     loading = true;
     console.log("onMount called");
@@ -43,13 +42,13 @@
       await getCart(cartId);
     }
 
-    await createPaymentCollection(cartId!);
+    // await createPaymentCollection(cartId!);
 
     await fetchProducts();
 
-    // initialize Stripe
-    stripe = await loadStripe(STRIPE_PUBLIC_KEY);
-    console.log("Stripe initialized:", stripe);
+    // // initialize Stripe
+    // stripe = await loadStripe(STRIPE_PUBLIC_KEY);
+    // console.log("Stripe initialized:", stripe);
     loading = false;
   });
 
@@ -401,7 +400,9 @@
     phone: "",
   };
 
-  async function formHandleSubmit() {
+  async function paymentButton() {
+    loading = true;
+    console.log("Payment button clicked");
     console.log("Billing Address:", billingAddress);
     const missing = [];
 
@@ -425,10 +426,7 @@
       alert("Please check the following fields: " + missing.join(", "));
       return;
     }
-    if (!sameAddress) {
-      console.log("Shipping Address:", shippingAddress);
-    }
-    console.log("Form submitted");
+
     if (sameAddress) {
       updateCart({
         cartId: cartId,
@@ -465,6 +463,22 @@
         },
       });
     }
+    console.log("Cart updated with checkout info, proceeding to payment...");
+    // the cart is now updated with the checkout information
+    // proceed to create payment collection, and
+
+    createPaymentCollection(cartId!);
+
+    // initialize Stripe
+    stripe = loadStripe(STRIPE_PUBLIC_KEY);
+    console.log("Stripe initialized:", stripe);
+
+    loading = false;
+  }
+
+  function checkoutButton() {
+    console.log("Checkout button clicked");
+    showModal = true;
   }
 </script>
 
@@ -512,8 +526,8 @@
 
   <div class="checkout">
     {#if cart && cart.items.length > 0}
-      <a href={cart.checkout_url} target="_blank">
-        <button on:click={() => (showModal = true)}>Zur Kasse gehen</button>
+      <a href={cart.checkout_url}>
+        <button on:click={checkoutButton}>Zur Kasse gehen</button>
       </a>
     {/if}
   </div>
@@ -530,7 +544,7 @@
         </button>
         <h2>Checkout Information</h2>
 
-        <form on:submit|preventDefault={formHandleSubmit}>
+        <form on:submit|preventDefault={paymentButton}>
           <label for="first-name" aria-required="true">Vorname</label>
           <input type="text" id="first-name" bind:value={firstName} />
 
