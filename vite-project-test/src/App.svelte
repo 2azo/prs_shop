@@ -56,10 +56,9 @@
   /* 
   Checkout logic:
     1- User clicks on "Zur Kasse gehen" button
-    2- Loading screen is displayed
-    3- Checkout modal is displayed 
+    2- Checkout modal is displayed 
     4- User inputs personal data 
-    5- User clicks on "Weiter Zur Zahlung" -> updates card information
+    5- User clicks on "Weiter Zur Zahlung" -> updates cart information
     6- Loading screen is displayed
     7- Stripe is initialized
     8- Payment Collection is created
@@ -687,7 +686,7 @@
   .modal-backdrop form {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.1rem;
   }
 
   label[aria-required="true"]::after {
@@ -697,7 +696,7 @@
 
   .modal-backdrop label {
     font-weight: 600;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
   }
 
   .modal-backdrop input {
@@ -708,8 +707,8 @@
   }
 
   .modal-backdrop button {
-    margin-top: 1.5rem;
-    padding: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.35rem;
     background-color: #3b82f6;
     color: white;
     border: none;
