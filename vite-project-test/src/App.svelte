@@ -17,9 +17,14 @@
   const STRIPE_PUBLIC_KEY =
     "pk_test_51SaNuj4tfJBc4SjuVHvVgMXBnJP8uFW1h0GNvmiyPhGeINwKJXoKL5CdEAK1CdIaUSEHDqfONOdEs6M78GMx4wG3004ZUdxQRS";
 
+  // admin email
+  const ADMIN_EMAIL = "mouaz.allahham@martini-werbeagentur.de";
+
   import { loadStripe } from "@stripe/stripe-js";
 
   let stripe: any = null;
+  let elements: any = null;
+  let card: any = null;
 
   let cartId: string | null = null;
   let cart: any = null;
@@ -27,6 +32,7 @@
   let clientSecret: string | null = null;
 
   let showModal = false;
+  let showPaymentModal = false;
   let loading = false;
 
   onMount(async () => {
@@ -110,7 +116,7 @@
       });
   }
 
-  function createPaymentCollection(cartId: string) {
+  async function createPaymentCollection(cartId: string): Promise<string> {
     // curl
     /*
     curl -X POST '{backend_url}/store/payment-collections' \
@@ -121,29 +127,31 @@
     }'
     */
 
-    fetch(`${API_URL}store/payment-collections`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-publishable-api-key": PUBLISHABLE_API_KEY,
-      },
-      body: JSON.stringify({
-        cart_id: cartId,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Payment collection created:", data);
-        paymentCollectionId = data.payment_collection.id;
-        console.log("Payment Collection ID:", data.payment_collection.id);
-        initializePaymentSession();
-      })
-      .catch((error) => {
-        console.error("Error creating payment collection:", error);
+    try {
+      const response = await fetch(`${API_URL}store/payment-collections`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": PUBLISHABLE_API_KEY,
+        },
+        body: JSON.stringify({
+          cart_id: cartId,
+        }),
       });
+
+      const data = await response.json();
+      console.log("Payment collection created:", data);
+      paymentCollectionId = data.payment_collection.id;
+      console.log("Payment Collection ID:", data.payment_collection.id);
+
+      return await initializePaymentSession();
+    } catch (error) {
+      console.error("Error creating payment collection:", error);
+      throw error;
+    }
   }
 
-  function initializePaymentSession() {
+  async function initializePaymentSession(): Promise<string> {
     // curl
     /*
     curl -X POST '{backend_url}/store/payment-collections/{id}/payment-sessions' \
@@ -157,38 +165,31 @@
       "Initializing payment session for collection ID:",
       paymentCollectionId
     );
-    fetch(
-      `${API_URL}store/payment-collections/${paymentCollectionId}/payment-sessions`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-publishable-api-key": PUBLISHABLE_API_KEY,
-        },
-        body: JSON.stringify({
-          provider_id: "pp_stripe_stripe",
-        }),
-      }
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Payment session initialized:", data);
-        console.log("data.payment_collection -> ", data.payment_collection);
-        console.log(
-          "data.payment_collection.payment_sessions   -> ",
-          data.payment_collection.payment_sessions
-        );
-        console.log(
-          "data.payment_collection.payment_sessions[0].data.client_secret -> ",
-          data.payment_collection.payment_sessions[0].data.client_secret
-        );
-        clientSecret =
-          data.payment_collection.payment_sessions[0].data.client_secret;
-        console.log("Client Secret:", clientSecret);
-      })
-      .catch((error) => {
-        console.error("Error initializing payment session:", error);
-      });
+
+    try {
+      const response = await fetch(
+        `${API_URL}store/payment-collections/${paymentCollectionId}/payment-sessions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": PUBLISHABLE_API_KEY,
+          },
+          body: JSON.stringify({
+            provider_id: "pp_stripe_stripe",
+          }),
+        }
+      );
+
+      const data = await response.json();
+      clientSecret =
+        data.payment_collection.payment_sessions[0].data.client_secret;
+      console.log("Client Secret:", clientSecret);
+      return clientSecret!;
+    } catch (error) {
+      console.error("Error initializing payment session:", error);
+      throw error;
+    }
   }
 
   async function fetchProducts() {
@@ -401,6 +402,7 @@
   };
 
   async function paymentButton() {
+    showPaymentModal = true;
     loading = true;
     console.log("Payment button clicked");
     console.log("Billing Address:", billingAddress);
@@ -467,13 +469,151 @@
     // the cart is now updated with the checkout information
     // proceed to create payment collection, and
 
-    createPaymentCollection(cartId!);
+    await createPaymentCollection(cartId!);
 
-    // initialize Stripe
-    stripe = loadStripe(STRIPE_PUBLIC_KEY);
+    // starting Stripe
+
+    // 1.initialize Stripe
+    stripe = await loadStripe(STRIPE_PUBLIC_KEY);
     console.log("Stripe initialized:", stripe);
 
+    // 2.create elements
+    // source: https://docs.stripe.com/js/elements_object/create
+    // "Use Element instances to collect sensitive information in your checkout flow."
+
+    // console.log("Client secret:", clientSecret);
+    const elements = stripe.elements({
+      clientSecret: clientSecret!,
+    });
+
+    // 3.create card element
+    // source: https://docs.stripe.com/js/elements_object/create_element?type=card
+
+    card = elements?.create("card", {
+      style: {
+        base: {
+          fontSize: "16px",
+          color: "#32325d",
+        },
+      },
+    });
+
+    // 4.mount card element
+    // source: https://docs.stripe.com/js/element/mount
+    // "You need to create a container DOM element to mount an Element"
+
+    card.mount("#card-element");
+
+    // confirm card payment
+    // resource: https://docs.stripe.com/js/payment_intents/confirm_card_payment
+
+    try {
+      await stripe?.confirmCardPayment(clientSecret!, {
+        payment_method: {
+          card: card!,
+          billing_details: {
+            name: firstName + " " + lastName,
+            email,
+            phone,
+            address: {
+              line1: billingAddress.street + " " + billingAddress.streetNumber,
+              city: billingAddress.city,
+              postal_code: billingAddress.postalCode,
+              country: "DE",
+            },
+          },
+        },
+        // return_url: window.location.href, // only if you are handling next actions yourself
+        receipt_email: ADMIN_EMAIL,
+      });
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+    }
+
+    // stripe
+    //   .confirmCardPayment(clientSecret!, {
+    //     payment_method: {
+    //       card: card!,
+    //       billing_details: {
+    //         name: "Jenny Rosen",
+    //       },
+    //     },
+    //   })
+    //   .then(function (result) {
+    //     console.log(result);
+    //   });
+
+    // const { error, paymentIntent } = await stripe.confirmCardPayment(
+    //   clientSecret!,
+    //   {
+    //     payment_method: {
+    //       card: card!,
+    //       billing_details: {
+    //         name: `${firstName} ${lastName}`,
+    //         email,
+    //         phone,
+    //         address: {
+    //           line1: `${billingAddress.street} ${billingAddress.streetNumber}`,
+    //           city: billingAddress.city,
+    //           postal_code: billingAddress.postalCode,
+    //           country: "DE",
+    //         },
+    //       },
+    //     },
+    //   }
+    // );
+
+    // if (error) {
+    //   errorEl.textContent = error.message || "Payment failed";
+    //   btn.disabled = false;
+    //   return;
+    // }
+
+    const res = await completeCart();
+
+    // const data = await res.json();
+
+    // if (data.type === "order" && data.order) {
+    //   alert("Order placed.");
+    //   console.log(data.order);
+    // } else {
+    //   console.error(data);
+    //   errorEl.textContent = "Could not complete order.";
+    // }
+
+    // btn.disabled = false;
+
     loading = false;
+  }
+
+  async function completeCart() {
+    // curl
+    /*
+      curl -X POST '{backend_url}/store/carts/{id}/complete' \
+      -H 'x-publishable-api-key: {your_publishable_api_key}'
+     */
+
+    try {
+      const res = await fetch(`${API_URL}store/carts/${cartId}/complete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": PUBLISHABLE_API_KEY,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.type === "order" && data.order) {
+        alert("Order placed.");
+        console.log(data.order);
+      } else {
+        console.error(data);
+        // error.textContent = "Could not complete order.";
+      }
+    } catch (error: any) {
+      console.error("Error completing cart:", error);
+    }
   }
 
   function checkoutButton() {
@@ -670,6 +810,30 @@
       <div class="loading-spinner">Lädt...</div>
     </div>
   {/if}
+
+  {#if showPaymentModal}
+    <div class="modal-backdrop">
+      <div class="modal">
+        <button
+          type="button"
+          class="close"
+          on:click={() => (showPaymentModal = false)}
+        >
+          ✖ schließen
+        </button>
+        <h2>Payment Information</h2>
+        <form id="payment-form">
+          <label for="card-element">Card</label>
+          <div id="card-element"></div>
+
+          <p id="card-error" style="color:red;"></p>
+          <div id="payment-element"></div>
+          <button id="pay-btn" type="submit">Place Order</button>
+          <div id="error-message"></div>
+        </form>
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
@@ -735,11 +899,6 @@
 
   .modal-backdrop button:hover {
     background-color: #2563eb;
-  }
-
-  .modal-backdrop #shipping-address {
-    /* margin-top: 1rem; */
-    /* background-color: #ffffff2c; */
   }
 
   .modal {
