@@ -35,6 +35,11 @@
   let showPaymentModal = false;
   let loading = false;
 
+  /* 
+  Checkout logic (+ Stripe) source: 
+  https://docs.medusajs.com/resources/storefront-development/checkout/payment/stripe#3-create-stripe-component
+  */
+
   onMount(async () => {
     loading = true;
     console.log("onMount called");
@@ -57,20 +62,6 @@
     // console.log("Stripe initialized:", stripe);
     loading = false;
   });
-
-  /* 
-  Checkout logic:
-    1- User clicks on "Zur Kasse gehen" button
-    2- Checkout modal is displayed 
-    4- User inputs personal data 
-    5- User clicks on "Weiter Zur Zahlung" -> updates cart information
-    6- Loading screen is displayed
-    7- Stripe is initialized
-    8- Payment Collection is created
-    9- Payment session is initialized
-    10- Stripe UI modal is displayed
-    11- Left: Interaction between Medusa and Strip + Confirmation/Error Page display
-  */
 
   function createCart() {
     fetch(API_URL + "store/carts", {
