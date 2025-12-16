@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import ProductCard from "./lib/ProductCard.svelte";
   import type { UpdateCartParams } from "./main";
+  import { tick } from "svelte";
 
   let products: any[] = [];
 
@@ -393,7 +394,6 @@
   };
 
   async function paymentButton() {
-    showPaymentModal = true;
     loading = true;
     console.log("Payment button clicked");
     console.log("Billing Address:", billingAddress);
@@ -421,7 +421,7 @@
     }
 
     if (sameAddress) {
-      updateCart({
+      await updateCart({
         cartId: cartId,
         action: "update_addresses",
         billingAddress: {
@@ -435,7 +435,7 @@
         },
       });
     } else {
-      updateCart({
+      await updateCart({
         cartId: cartId,
         action: "update_addresses",
         billingAddress: {
@@ -461,11 +461,13 @@
     // proceed to create payment collection, and
 
     await createPaymentCollection(cartId!);
-
+    showPaymentModal = true;
+    await tick();
     // starting Stripe
 
     // 1.initialize Stripe
-    stripe = await loadStripe(STRIPE_PUBLIC_KEY);
+    // stripe = await loadStripe(STRIPE_PUBLIC_KEY);
+    if (!stripe) stripe = await loadStripe(STRIPE_PUBLIC_KEY);
     console.log("Stripe initialized:", stripe);
 
     // 2.create elements
@@ -473,21 +475,23 @@
     // "Use Element instances to collect sensitive information in your checkout flow."
 
     // console.log("Client secret:", clientSecret);
-    const elements = stripe.elements({
-      clientSecret: clientSecret!,
-    });
+    if (!elements)
+      elements = stripe.elements({
+        clientSecret: clientSecret!,
+      });
 
     // 3.create card element
     // source: https://docs.stripe.com/js/elements_object/create_element?type=card
 
-    card = elements?.create("card", {
-      style: {
-        base: {
-          fontSize: "16px",
-          color: "#32325d",
+    if (!card)
+      card = elements?.create("card", {
+        style: {
+          base: {
+            fontSize: "16px",
+            color: "#32325d",
+          },
         },
-      },
-    });
+      });
 
     // 4.mount card element
     // source: https://docs.stripe.com/js/element/mount
@@ -498,28 +502,28 @@
     // confirm card payment
     // resource: https://docs.stripe.com/js/payment_intents/confirm_card_payment
 
-    try {
-      await stripe?.confirmCardPayment(clientSecret!, {
-        payment_method: {
-          card: card!,
-          billing_details: {
-            name: firstName + " " + lastName,
-            email,
-            phone,
-            address: {
-              line1: billingAddress.street + " " + billingAddress.streetNumber,
-              city: billingAddress.city,
-              postal_code: billingAddress.postalCode,
-              country: "DE",
-            },
-          },
-        },
-        // return_url: window.location.href, // only if you are handling next actions yourself
-        receipt_email: ADMIN_EMAIL,
-      });
-    } catch (error) {
-      console.error("Error confirming payment:", error);
-    }
+    // try {
+    //   await stripe?.confirmCardPayment(clientSecret!, {
+    //     payment_method: {
+    //       card: card!,
+    //       billing_details: {
+    //         name: firstName + " " + lastName,
+    //         email,
+    //         phone,
+    //         address: {
+    //           line1: billingAddress.street + " " + billingAddress.streetNumber,
+    //           city: billingAddress.city,
+    //           postal_code: billingAddress.postalCode,
+    //           country: "DE",
+    //         },
+    //       },
+    //     },
+    //     // return_url: window.location.href, // only if you are handling next actions yourself
+    //     receipt_email: ADMIN_EMAIL,
+    //   });
+    // } catch (error) {
+    //   console.error("Error confirming payment:", error);
+    // }
 
     // stripe
     //   .confirmCardPayment(clientSecret!, {
@@ -560,7 +564,7 @@
     //   return;
     // }
 
-    const res = await completeCart();
+    // const res = await completeCart();
 
     // const data = await res.json();
 
@@ -573,6 +577,39 @@
     // }
 
     // btn.disabled = false;
+
+    loading = false;
+  }
+
+  //
+  async function payNow() {
+    let cardError = "";
+    loading = true;
+
+    const { error } = await stripe.confirmCardPayment(clientSecret!, {
+      payment_method: {
+        card,
+        billing_details: {
+          name: `${firstName} ${lastName}`,
+          email,
+          phone,
+          address: {
+            line1: `${billingAddress.street} ${billingAddress.streetNumber}`,
+            city: billingAddress.city,
+            postal_code: billingAddress.postalCode,
+            country: "DE",
+          },
+        },
+      },
+    });
+
+    if (error) {
+      cardError = error.message ?? "Payment failed";
+      loading = false;
+      return;
+    }
+
+    await completeCart();
 
     loading = false;
   }
@@ -611,6 +648,15 @@
     console.log("Checkout button clicked");
     showModal = true;
   }
+
+  // Curl
+  /*
+   turn "requires_shipping" to false
+
+   curl -X POST '{backend_url}/admin/shipping-option-types/{id}' \
+    -H 'Authorization: Bearer {jwt_token}'
+
+   */
 </script>
 
 <main class="product-page">
@@ -810,16 +856,20 @@
           class="close"
           on:click={() => (showPaymentModal = false)}
         >
-          ✖ schließen
+          ✖ schließenf
         </button>
+
         <h2>Payment Information</h2>
-        <form id="payment-form">
+
+        <form id="payment-form" on:submit={payNow}>
           <label for="card-element">Card</label>
           <div id="card-element"></div>
 
           <p id="card-error" style="color:red;"></p>
-          <div id="payment-element"></div>
-          <button id="pay-btn" type="submit">Place Order</button>
+          <!-- <div id="payment-element"></div> -->
+          <button id="pay-btn" type="submit" disabled={loading}
+            >Place Order</button
+          >
           <div id="error-message"></div>
         </form>
       </div>
