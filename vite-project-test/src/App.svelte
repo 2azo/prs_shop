@@ -416,6 +416,7 @@
     if (!billingAddress.country) missing.push("Country");
 
     if (missing.length > 0) {
+      loading = false;
       alert("Please check the following fields: " + missing.join(", "));
       return;
     }
@@ -633,8 +634,11 @@
       const data = await res.json();
 
       if (data.type === "order" && data.order) {
-        alert("Order placed.");
         console.log(data.order);
+        // deleting cart id from localStorage
+        localStorage.removeItem("cart_id");
+        cartId = null;
+        alert("Order placed.");
       } else {
         console.error(data);
         // error.textContent = "Could not complete order.";
