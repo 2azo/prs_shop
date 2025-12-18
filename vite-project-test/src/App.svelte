@@ -882,6 +882,15 @@
 </main>
 
 <style>
+  /*color variables */
+  :root {
+    --main-orange: #faa61a;
+    --light-grey: #a5aeb4;
+    --dark-grey: #6f7c84;
+    --white: #ffffff;
+    --black: #111827;
+  }
+
   .loading-backdrop {
     position: fixed;
     inset: 0;
@@ -924,7 +933,7 @@
 
   .modal-backdrop input {
     padding: 0.5rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--light-grey);
     border-radius: 4px;
     font-size: 1rem;
   }
@@ -932,8 +941,8 @@
   .modal-backdrop button {
     margin-top: 0.75rem;
     padding: 0.35rem;
-    background-color: #3b82f6;
-    color: white;
+    background-color: var(--main-orange);
+    color: var(--white);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -943,7 +952,7 @@
   }
 
   .modal-backdrop button:hover {
-    background-color: #2563eb;
+    background-color: var(--dark-grey);
   }
 
   .modal {
@@ -971,8 +980,8 @@
 
   .checkout button {
     padding: 0.75rem 1.5rem;
-    background-color: #10b981;
-    color: white;
+    background-color: var(--main-orange);
+    color: var(--white);
     border: none;
     border-radius: 6px;
     font-size: 1rem;
@@ -982,15 +991,15 @@
   }
 
   .checkout button:hover {
-    background-color: #059669;
+    background-color: var(--dark-grey);
   }
 
   .cart-summary {
     margin-top: 3rem;
     padding: 1rem;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--light-grey);
     border-radius: 8px;
-    background-color: #f9fafb;
+    background-color: var(--white);
   }
 
   .product-page {

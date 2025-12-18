@@ -97,7 +97,8 @@
       {/if}
     </div>
 
-    <div class="add-to-cart">
+    <!-- disable clicking if no variant is selected -->
+    <div class="add-to-cart" class:disabled={!selectedVariantId}>
       <button
         disabled={!selectedVariantId}
         on:click={() =>
@@ -110,8 +111,16 @@
 </li>
 
 <style>
+  :root {
+    --main-orange: #faa61a;
+    --light-orange: rgba(250, 168, 26, 0.2);
+    --light-grey: #a5aeb4;
+    --dark-grey: #6f7c84;
+    --white: #ffffff;
+    --black: #111827;
+  }
   .product-card {
-    background: #fff;
+    background: var(--white);
     border-radius: 12px;
     box-shadow:
       0 4px 6px -1px rgba(0, 0, 0, 0.1),
@@ -136,7 +145,7 @@
     position: relative;
     width: 100%;
     padding-top: 100%; /* 1:1 Aspect Ratio */
-    background-color: #f3f4f6;
+    background-color: var(--light-grey);
     overflow: hidden;
   }
 
@@ -252,8 +261,8 @@
     flex-direction: column;
     align-items: center;
     padding: 0.5rem 0.75rem;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--white);
+    border: 1px solid var(--main-orange);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
@@ -261,25 +270,37 @@
   }
 
   .variant-btn:hover {
-    border-color: #3b82f6;
-    background: #eff6ff;
+    border-color: var(--white);
+    background: var(--light-orange);
   }
 
   .variant-btn.selected-variant {
-    border-color: #2563eb;
-    background: #dbeafe;
+    border-color: var(--white);
+    background: var(--main-orange);
   }
 
   .add-to-cart button {
     margin-top: 1.5rem;
     text-align: center;
     padding: 0.5rem 0.75rem;
-    background: #fff;
-    border: 1px solid #e5e7eb;
+    background: var(--light-orange);
+    border: 1px solid var(--main-orange);
+    color: var(--black);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
     min-width: 80px;
+  }
+
+  .add-to-cart button:hover {
+    background: var(--main-orange);
+    color: var(--white);
+  }
+
+  .add-to-cart button:disabled {
+    background: var(--light-grey);
+    color: var(--dark-grey);
+    cursor: not-allowed;
   }
 
   .variant-title,
