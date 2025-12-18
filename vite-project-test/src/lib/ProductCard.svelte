@@ -1,34 +1,59 @@
 <script lang="ts">
+  import { onMount, onDestroy } from "svelte";
   import type { Update } from "vite/types/hmrPayload.js";
   import type { UpdateCartParams } from "../main";
 
   export let product: any;
   export let updateCart: (params: UpdateCartParams) => void;
   export let cartId: string | null;
-  //   console.log("Product in ProductCard:", product);
 
   let currentImageIndex = 0;
+  let showLightbox = false;
 
   $: images = product.images || [];
   $: currentImage = images.length > 0 ? images[currentImageIndex] : null;
 
-  const nextImage = () => {
+  const nextImage = (e?: Event) => {
+    e?.stopPropagation();
     if (images.length > 1) {
       currentImageIndex = (currentImageIndex + 1) % images.length;
     }
   };
 
-  const prevImage = () => {
+  const prevImage = (e?: Event) => {
+    e?.stopPropagation();
     if (images.length > 1) {
       currentImageIndex =
         (currentImageIndex - 1 + images.length) % images.length;
     }
   };
 
+  const openLightbox = () => {
+    showLightbox = true;
+  };
+
+  const closeLightbox = () => {
+    showLightbox = false;
+  };
+
+  const handleKeydown = (e: KeyboardEvent) => {
+    if (!showLightbox) return;
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowRight") nextImage();
+    if (e.key === "ArrowLeft") prevImage();
+  };
+
+  onMount(() => {
+    window.addEventListener("keydown", handleKeydown);
+  });
+
+  onDestroy(() => {
+    window.removeEventListener("keydown", handleKeydown);
+  });
+
   let selectedVariantId: string | null = null;
   function handleClick(variantId: string) {
     if (selectedVariantId === variantId) {
-      // Deselect if the same variant is clicked
       selectedVariantId = null;
       return;
     }
@@ -40,7 +65,18 @@
 <li class="product-card">
   <div class="image-container">
     {#if currentImage}
-      <img src={currentImage.url} alt={product.title} class="product-image" />
+      <button
+        type="button"
+        class="image-button"
+        on:click={openLightbox}
+        aria-label="Bild vergrößern"
+      >
+        <img
+          src={currentImage.url}
+          alt={product.title}
+          class="product-image clickable"
+        />
+      </button>
       {#if images.length > 1}
         <button class="nav-btn prev" on:click={prevImage}>&lt;</button>
         <button class="nav-btn next" on:click={nextImage}>&gt;</button>
@@ -110,6 +146,54 @@
   </div>
 </li>
 
+{#if showLightbox}
+  <div
+    class="lightbox-backdrop"
+    on:click={closeLightbox}
+    on:keydown={(e) => e.key === "Escape" && closeLightbox()}
+    role="button"
+    tabindex="-1"
+    aria-label="Lightbox schließen"
+  >
+    <button
+      class="lightbox-close"
+      on:click={closeLightbox}
+      aria-label="Schließen"
+    >
+      ✕
+    </button>
+
+    {#if images.length > 1}
+      <button
+        class="lightbox-nav lightbox-prev"
+        on:click={prevImage}
+        aria-label="Vorheriges Bild"
+      >
+        ‹
+      </button>
+    {/if}
+
+    <img src={currentImage?.url} alt={product.title} class="lightbox-image" />
+
+    {#if images.length > 1}
+      <button
+        class="lightbox-nav lightbox-next"
+        on:click={nextImage}
+        aria-label="Nächstes Bild"
+      >
+        ›
+      </button>
+
+      <div class="lightbox-dots">
+        {#each images as _, i}
+          <span class="lightbox-dot" class:active={i === currentImageIndex}
+          ></span>
+        {/each}
+      </div>
+    {/if}
+  </div>
+{/if}
+
 <style>
   :root {
     --main-orange: #faa61a;
@@ -149,6 +233,18 @@
     overflow: hidden;
   }
 
+  .image-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: zoom-in;
+  }
+
   .product-image {
     position: absolute;
     top: 0;
@@ -156,7 +252,17 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: opacity 0.3s ease;
+    transition:
+      opacity 0.3s ease,
+      transform 0.2s ease;
+  }
+
+  .product-image.clickable {
+    cursor: zoom-in;
+  }
+
+  .product-image.clickable:hover {
+    transform: scale(1.02);
   }
 
   .nav-btn {
@@ -314,5 +420,119 @@
     font-size: 0.75rem;
     color: #6b7280;
     margin: 2rem;
+  }
+
+  /* Lightbox Styles */
+  .lightbox-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .lightbox-image {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 4px;
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    opacity: 0.7;
+    transition:
+      opacity 0.2s,
+      transform 0.2s;
+  }
+
+  .lightbox-close:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    font-size: 3rem;
+    cursor: pointer;
+    padding: 1rem 1.5rem;
+    line-height: 1;
+    opacity: 0.7;
+    transition:
+      opacity 0.2s,
+      background 0.2s;
+    border-radius: 4px;
+  }
+
+  .lightbox-nav:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .lightbox-prev {
+    left: 20px;
+  }
+
+  .lightbox-next {
+    right: 20px;
+  }
+
+  .lightbox-dots {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+  }
+
+  .lightbox-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transition: background 0.2s;
+  }
+
+  .lightbox-dot.active {
+    background: white;
   }
 </style>
