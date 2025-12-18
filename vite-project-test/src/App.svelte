@@ -575,7 +575,7 @@
 
   function continueShopping() {
     showSuccessModal = false;
-    // window.location.reload();
+    window.location.reload();
   }
 
   // general curl
