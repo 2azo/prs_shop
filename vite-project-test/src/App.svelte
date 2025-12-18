@@ -22,6 +22,7 @@
   const ADMIN_EMAIL = "mouaz.allahham@martini-werbeagentur.de";
 
   import { loadStripe } from "@stripe/stripe-js";
+  import { preventDefault } from "svelte/legacy";
 
   let stripe: any = null;
   let elements: any = null;
@@ -34,6 +35,7 @@
 
   let showModal = false;
   let showPaymentModal = false;
+  let showSuccessModal = false;
   let loading = false;
 
   /* 
@@ -45,7 +47,6 @@
     loading = true;
     console.log("onMount called");
 
-    // check if cart id exists in localStorage
     cartId = localStorage.getItem("cart_id");
     if (!cartId) {
       await createCart();
@@ -54,13 +55,7 @@
       await getCart(cartId);
     }
 
-    // await createPaymentCollection(cartId!);
-
     await fetchProducts();
-
-    // // initialize Stripe
-    // stripe = await loadStripe(STRIPE_PUBLIC_KEY);
-    // console.log("Stripe initialized:", stripe);
     loading = false;
   });
 
@@ -74,7 +69,6 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        // store cart id in localStorage
         localStorage.setItem("cart_id", data.cart.id);
         cartId = data.cart.id;
         console.log("New cart created with ID:", data.cart.id);
@@ -500,90 +494,11 @@
 
     card.mount("#card-element");
 
-    // confirm card payment
-    // resource: https://docs.stripe.com/js/payment_intents/confirm_card_payment
-
-    // try {
-    //   await stripe?.confirmCardPayment(clientSecret!, {
-    //     payment_method: {
-    //       card: card!,
-    //       billing_details: {
-    //         name: firstName + " " + lastName,
-    //         email,
-    //         phone,
-    //         address: {
-    //           line1: billingAddress.street + " " + billingAddress.streetNumber,
-    //           city: billingAddress.city,
-    //           postal_code: billingAddress.postalCode,
-    //           country: "DE",
-    //         },
-    //       },
-    //     },
-    //     // return_url: window.location.href, // only if you are handling next actions yourself
-    //     receipt_email: ADMIN_EMAIL,
-    //   });
-    // } catch (error) {
-    //   console.error("Error confirming payment:", error);
-    // }
-
-    // stripe
-    //   .confirmCardPayment(clientSecret!, {
-    //     payment_method: {
-    //       card: card!,
-    //       billing_details: {
-    //         name: "Jenny Rosen",
-    //       },
-    //     },
-    //   })
-    //   .then(function (result) {
-    //     console.log(result);
-    //   });
-
-    // const { error, paymentIntent } = await stripe.confirmCardPayment(
-    //   clientSecret!,
-    //   {
-    //     payment_method: {
-    //       card: card!,
-    //       billing_details: {
-    //         name: `${firstName} ${lastName}`,
-    //         email,
-    //         phone,
-    //         address: {
-    //           line1: `${billingAddress.street} ${billingAddress.streetNumber}`,
-    //           city: billingAddress.city,
-    //           postal_code: billingAddress.postalCode,
-    //           country: "DE",
-    //         },
-    //       },
-    //     },
-    //   }
-    // );
-
-    // if (error) {
-    //   errorEl.textContent = error.message || "Payment failed";
-    //   btn.disabled = false;
-    //   return;
-    // }
-
-    // const res = await completeCart();
-
-    // const data = await res.json();
-
-    // if (data.type === "order" && data.order) {
-    //   alert("Order placed.");
-    //   console.log(data.order);
-    // } else {
-    //   console.error(data);
-    //   errorEl.textContent = "Could not complete order.";
-    // }
-
-    // btn.disabled = false;
-
     loading = false;
   }
 
-  //
-  async function payNow() {
+  async function payNow(event: Event) {
+    event.preventDefault();
     let cardError = "";
     loading = true;
 
@@ -633,12 +548,17 @@
 
       const data = await res.json();
 
-      if (data.type === "order" && data.order) {
+      console.log(data);
+
+      if (data.type === "order") {
         console.log(data.order);
         // deleting cart id from localStorage
         localStorage.removeItem("cart_id");
         cartId = null;
-        alert("Order placed.");
+        cart = null;
+        showPaymentModal = false;
+        showModal = false;
+        showSuccessModal = true;
       } else {
         console.error(data);
         // error.textContent = "Could not complete order.";
@@ -653,7 +573,12 @@
     showModal = true;
   }
 
-  // Curl
+  function continueShopping() {
+    showSuccessModal = false;
+    window.location.reload();
+  }
+
+  // general curl
   /*
    turn "requires_shipping" to false
 
@@ -666,14 +591,14 @@
 <main class="product-page">
   <h1>Produkte</h1>
 
-  {#if products.length > 0 && cartId}
+  {#if products.length > 0}
     <ul class="product-list">
       {#each products as product}
         <ProductCard {product} {updateCart} {cartId} />
       {/each}
     </ul>
   {:else}
-    <p class="no-products">Keine Produkte oder Warenkorb gefunden.</p>
+    <p class="no-products">Keine Produkte gefunden.</p>
   {/if}
 
   <div class="cart-summary">
@@ -879,6 +804,52 @@
       </div>
     </div>
   {/if}
+
+  {#if showSuccessModal}
+    <div class="modal-backdrop">
+      <div class="modal success-modal">
+        <div class="success-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 52 52"
+            width="64"
+            height="64"
+          >
+            <circle
+              cx="26"
+              cy="26"
+              r="25"
+              fill="none"
+              stroke="#22c55e"
+              stroke-width="2"
+            />
+            <path
+              fill="none"
+              stroke="#22c55e"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M14 27l8 8 16-16"
+            />
+          </svg>
+        </div>
+        <h2>Danke für Ihre Bestellung!</h2>
+        <p class="success-message">
+          Ihre Bestellung wurde erfolgreich aufgegeben. Sie erhalten in Kürze
+          eine Bestätigungs-E-Mail.
+        </p>
+        <button
+          class="continue-btn"
+          on:click={() => {
+            showSuccessModal = false;
+            continueShopping();
+          }}
+        >
+          Weiter einkaufen
+        </button>
+      </div>
+    </div>
+  {/if}
 </main>
 
 <style>
@@ -1027,5 +998,59 @@
     text-align: center;
     color: #6b7280;
     font-size: 1.1rem;
+  }
+
+  .success-modal {
+    text-align: center;
+    padding: 2.5rem 2rem;
+  }
+
+  .success-icon {
+    margin-bottom: 1.5rem;
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  @keyframes scaleIn {
+    from {
+      transform: scale(0);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .success-modal h2 {
+    color: #111827;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  .success-message {
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .continue-btn {
+    padding: 0.75rem 2rem;
+    background-color: var(--main-orange);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      transform 0.1s;
+  }
+
+  .continue-btn:hover {
+    background-color: var(--dark-grey);
+    transform: translateY(-1px);
   }
 </style>
