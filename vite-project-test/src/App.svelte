@@ -15,8 +15,7 @@
   const API_URL = "http://localhost:9000/";
 
   // Stripe public key
-  const STRIPE_PUBLIC_KEY =
-    "pk_test_51SaNuj4tfJBc4SjuVHvVgMXBnJP8uFW1h0GNvmiyPhGeINwKJXoKL5CdEAK1CdIaUSEHDqfONOdEs6M78GMx4wG3004ZUdxQRS";
+  const STRIPE_PUBLIC_KEY = "";
 
   // admin email
   const ADMIN_EMAIL = "mouaz.allahham@martini-werbeagentur.de";
@@ -149,7 +148,7 @@
     */
     console.log(
       "Initializing payment session for collection ID:",
-      paymentCollectionId
+      paymentCollectionId,
     );
 
     try {
@@ -164,7 +163,7 @@
           body: JSON.stringify({
             provider_id: "pp_stripe_stripe",
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -197,7 +196,7 @@
           headers: {
             "x-publishable-api-key": PUBLISHABLE_API_KEY,
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -256,7 +255,7 @@
       }'
       */
       let quantity = cart.items.find(
-        (item: any) => item.variant_id === variantId
+        (item: any) => item.variant_id === variantId,
       )?.quantity;
 
       // console.log("Current quantity of item to remove:", quantity);
