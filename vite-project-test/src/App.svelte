@@ -12,7 +12,7 @@
   const REGION_ID = "reg_01KA94WK5BH4BEDW4GS6G49V4G";
 
   // path to backend server - Medusa
-  const API_URL = "http://localhost:9000/";
+  const API_URL = "https://prs-shop.martiniwerbeagentur.com/";
 
   // Stripe public key
   const STRIPE_PUBLIC_KEY = "";
