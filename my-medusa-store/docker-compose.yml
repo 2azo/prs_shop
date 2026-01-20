@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://postgres:00@localhost:5432/prs_shop_db2
+      DATABASE_URL: ${DATABASE_URL}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
     ports:
       - "9000:9000"
@@ -19,7 +19,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 00
+      POSTGRES_PASSWORD: securepassword
       POSTGRES_DB: prs_shop_db2
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -28,6 +28,21 @@ services:
       interval: 2s
       timeout: 5s
       retries: 30
+  
+  caddy:
+    container_name: caddy_server
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./conf:/etc/caddy
+      - caddy_data:/data
+      - caddy_config:/config
 
 volumes:
   pg_data:
+  caddy_data:
+  caddy_config:
