@@ -602,7 +602,7 @@
 
   <div class="cart-summary">
     <h2>Warenkorb</h2>
-    <h2>Produkte</h2>
+    <!-- <h2>Produkte</h2> -->
     {#if cart}
       <ul>
         {#each cart.items as item}
@@ -861,6 +861,14 @@
     --black: #111827;
   }
 
+  button[type="submit"] {
+    background: none !important;
+  }
+
+  button[type="submit"]:hover {
+    background: none !important;
+  }
+
   .loading-backdrop {
     position: fixed;
     inset: 0;
@@ -980,7 +988,7 @@
   }
 
   h1 {
-    text-align: center;
+    text-align: left;
     color: #111827;
     margin-bottom: 2rem;
   }
@@ -994,7 +1002,7 @@
   }
 
   .no-products {
-    text-align: center;
+    text-align: left;
     color: #6b7280;
     font-size: 1.1rem;
   }

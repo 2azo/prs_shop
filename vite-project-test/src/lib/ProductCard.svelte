@@ -96,7 +96,7 @@
     <p class="product-description">{product.description}</p>
 
     <div class="product-variants">
-      <h3>Variations</h3>
+      <h3>Variationen</h3>
       <div class="variant-buttons">
         {#each product.variants as variant}
           <!-- if clicked, make it blue -->
@@ -120,7 +120,7 @@
     </div>
 
     <div class="variant-price">
-      <h3>Price:</h3>
+      <h3>Preis:</h3>
       {#if product.variants && product.variants.length > 0}
         {#each product.variants as variant (variant.id)}
           {#if selectedVariantId === variant.id}
