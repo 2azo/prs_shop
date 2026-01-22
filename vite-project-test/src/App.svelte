@@ -12,7 +12,7 @@
   const REGION_ID = "reg_01KA94WK5BH4BEDW4GS6G49V4G";
 
   // path to backend server - Medusa
-  const API_URL = "https://prs-shop.martiniwerbeagentur.com/";
+  const API_URL = "http://localhost:9000/";
 
   // Stripe public key
   const STRIPE_PUBLIC_KEY = "";
@@ -37,14 +37,22 @@
   let showSuccessModal = false;
   let loading = false;
 
+  // let header: HTMLElement | null;
+
   /* 
   Checkout logic (+ Stripe) source: 
   https://docs.medusajs.com/resources/storefront-development/checkout/payment/stripe#3-create-stripe-component
   */
 
   onMount(async () => {
+    // header = document.getElementById("header");
+    // if (header) {
+    //   const rect = header.getBoundingClientRect();
+    //   const headerHeight = rect.height;
+    // }
+
     loading = true;
-    console.log("onMount called");
+    // console.log("onMount called");
 
     cartId = localStorage.getItem("cart_id");
     if (!cartId) {
@@ -590,51 +598,52 @@
 <main class="product-page">
   <h1>Produkte</h1>
 
-  {#if products.length > 0}
-    <ul class="product-list">
-      {#each products as product}
-        <ProductCard {product} {updateCart} {cartId} />
-      {/each}
-    </ul>
-  {:else}
-    <p class="no-products">Keine Produkte gefunden.</p>
-  {/if}
-
-  <div class="cart-summary">
-    <h2>Warenkorb</h2>
-    <!-- <h2>Produkte</h2> -->
-    {#if cart}
-      <ul>
-        {#each cart.items as item}
-          <li>
-            {item.title}
-            {item.variant_title} - Menge: {item.quantity}
-            <button
-              on:click={() =>
-                updateCart({
-                  cartId,
-                  action: "remove",
-                  variantId: item.variant_id,
-                  itemId: item.id,
-                })}
-            >
-              Entfernen
-            </button>
-          </li>
+  <div class="products-container">
+    {#if products.length > 0}
+      <ul class="product-list">
+        {#each products as product}
+          <ProductCard {product} {updateCart} {cartId} />
         {/each}
       </ul>
-      <p>Gesamt: {cart.total} {cart.currency_code.toUpperCase()}</p>
     {:else}
-      <p>Warenkorb ist leer.</p>
+      <p class="no-products">Keine Produkte gefunden.</p>
     {/if}
-  </div>
 
-  <div class="checkout">
-    {#if cart && cart.items.length > 0}
-      <a href={cart.checkout_url}>
-        <button on:click={checkoutButton}>Zur Kasse gehen</button>
-      </a>
-    {/if}
+    <div class="cart-summary">
+      <h2>Warenkorb</h2>
+      <!-- <h2>Produkte</h2> -->
+      {#if cart}
+        <ul>
+          {#each cart.items as item}
+            <li>
+              {item.title}
+              {item.variant_title} - Menge: {item.quantity}
+              <button
+                on:click={() =>
+                  updateCart({
+                    cartId,
+                    action: "remove",
+                    variantId: item.variant_id,
+                    itemId: item.id,
+                  })}
+              >
+                Entfernen
+              </button>
+            </li>
+          {/each}
+        </ul>
+        <p>Gesamt: {cart.total} {cart.currency_code.toUpperCase()}</p>
+      {:else}
+        <p>Warenkorb ist leer.</p>
+      {/if}
+      <div class="checkout">
+        {#if cart && cart.items.length > 0}
+          <a href={cart.checkout_url}>
+            <button on:click={checkoutButton}>Zur Kasse gehen</button>
+          </a>
+        {/if}
+      </div>
+    </div>
   </div>
 
   {#if showModal}
@@ -875,6 +884,13 @@
     background: none !important;
   } */
 
+  .products-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
   .same-address-box {
     display: flex;
     align-items: center;
@@ -884,7 +900,7 @@
   }
 
   .same-address-box label {
-    margin: 0;
+    margin: 0 !important;
   }
 
   .loading-backdrop {
@@ -993,17 +1009,33 @@
   }
 
   .cart-summary {
-    margin-top: 3rem;
+    margin-top: 1rem;
     padding: 1rem;
     border: 2px solid var(--light-grey);
     border-radius: 8px;
     background-color: var(--white);
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+    z-index: 1;
+  }
+
+  .cart-summary li {
+    margin-bottom: 1rem;
+  }
+
+  .cart-summary li button {
+    margin-top: 0.5rem;
+  }
+
+  .cart-summary ul {
+    padding-left: 1rem;
   }
 
   .product-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 0rem;
     font-family: "Inter", sans-serif;
   }
 
@@ -1017,8 +1049,9 @@
     list-style: none;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
+    /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
+    grid-template-columns: none;
+    gap: 4rem;
   }
 
   .no-products {

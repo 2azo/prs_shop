@@ -214,8 +214,9 @@
       transform 0.2s,
       box-shadow 0.2s;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     height: 100%;
+    align-items: flex-start;
   }
 
   .product-card:hover {
@@ -227,10 +228,12 @@
 
   .image-container {
     position: relative;
-    width: 100%;
-    padding-top: 100%; /* 1:1 Aspect Ratio */
+    width: 50%;
+    /* min-height: 300px; */
+    flex-shrink: 0;
     background-color: var(--light-grey);
     overflow: hidden;
+    aspect-ratio: 3/2;
   }
 
   .image-button {
@@ -255,6 +258,8 @@
     transition:
       opacity 0.3s ease,
       transform 0.2s ease;
+    object-fit: contain;
+    margin: 0;
   }
 
   .product-image.clickable {
@@ -329,6 +334,8 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    width: 50%;
+    text-align: left;
   }
 
   .product-title {
@@ -358,7 +365,6 @@
 
   .variant-buttons {
     display: flex;
-    justify-content: center;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
@@ -421,6 +427,8 @@
     font-size: 0.75rem;
     color: #6b7280;
     margin: 2rem;
+    margin-left: 0;
+    min-height: 60px;
   }
 
   /* Lightbox Styles */
