@@ -664,10 +664,16 @@
 
           <h3>Rechnungsadresse</h3>
 
-          <label for="same-address"
-            >Rechnungsadresse ist gleich wie Lieferadresse</label
-          >
-          <input type="checkbox" id="same-address" bind:checked={sameAddress} />
+          <div class="same-address-box">
+            <label for="same-address"
+              >Rechnungsadresse ist gleich wie Lieferadresse</label
+            >
+            <input
+              type="checkbox"
+              id="same-address"
+              bind:checked={sameAddress}
+            />
+          </div>
 
           <label for="billing-company-name">Firmenname</label>
           <input
@@ -861,12 +867,24 @@
     --black: #111827;
   }
 
-  button[type="submit"] {
+  /* button[type="submit"] {
     background: none !important;
+  } */
+
+  /* button[type="submit"]:hover {
+    background: none !important;
+  } */
+
+  .same-address-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
-  button[type="submit"]:hover {
-    background: none !important;
+  .same-address-box label {
+    margin: 0;
   }
 
   .loading-backdrop {
@@ -940,6 +958,8 @@
     width: 400px;
     max-width: 90%;
     position: relative;
+    overflow-y: auto;
+    max-height: 90vh;
   }
 
   .close {
