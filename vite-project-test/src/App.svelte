@@ -12,7 +12,8 @@
   const REGION_ID = "reg_01KA94WK5BH4BEDW4GS6G49V4G";
 
   // path to backend server - Medusa
-  const API_URL = "http://localhost:9000/";
+  // const API_URL = "http://localhost:9000/";
+  const API_URL = "https://prs-shop.martiniwerbeagentur.com/";
 
   // Stripe public key
   const STRIPE_PUBLIC_KEY = "";
@@ -889,6 +890,7 @@
     flex-direction: row;
     justify-content: space-between;
     gap: 1rem;
+    margin-bottom: 3rem;
   }
 
   .same-address-box {
@@ -1033,6 +1035,10 @@
     padding-left: 1rem;
   }
 
+  .cart-summary h2 {
+    margin-top: 0;
+  }
+
   .product-page {
     max-width: 1200px;
     margin: 0 auto;
@@ -1114,5 +1120,12 @@
   .continue-btn:hover {
     background-color: var(--dark-grey);
     transform: translateY(-1px);
+  }
+
+  /* adjusting original stylings */
+  :global(#container),
+  :global(#footer > .inside) {
+    overflow: visible !important;
+    display: flow-root !important;
   }
 </style>
