@@ -1018,6 +1018,7 @@
     position: sticky;
     top: 100px;
     z-index: 1;
+    flex: 1;
   }
 
   .cart-summary li {
@@ -1052,6 +1053,7 @@
     /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
     grid-template-columns: none;
     gap: 4rem;
+    flex: 2;
   }
 
   .no-products {

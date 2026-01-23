@@ -331,6 +331,8 @@
 
   .product-info {
     padding: 1.5rem;
+    padding-bottom: 0;
+    padding-top: 0.5rem;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
@@ -393,7 +395,7 @@
   }
 
   .add-to-cart button {
-    margin-top: 1.5rem;
+    margin-top: 0rem;
     text-align: center;
     padding: 0.5rem 0.75rem;
     background: var(--light-orange);
@@ -428,6 +430,7 @@
     color: #6b7280;
     margin: 2rem;
     margin-left: 0;
+    margin-bottom: 0;
     min-height: 60px;
   }
 
