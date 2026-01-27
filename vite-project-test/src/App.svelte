@@ -633,7 +633,10 @@
             </li>
           {/each}
         </ul>
-        <p>Gesamt: {cart.total} {cart.currency_code.toUpperCase()}</p>
+        <p class="cart-total">
+          Gesamt: {cart.total}
+          {cart.currency_code.toUpperCase()}
+        </p>
       {:else}
         <p>Warenkorb ist leer.</p>
       {/if}
@@ -1127,5 +1130,20 @@
   :global(#footer > .inside) {
     overflow: visible !important;
     display: flow-root !important;
+  }
+
+  .cart-total {
+    font-weight: 600;
+  }
+
+  @media all and (max-width: 768px) {
+    .products-container {
+      flex-direction: column;
+    }
+
+    .product-page {
+      display: flex;
+      flex-direction: column;
+    }
   }
 </style>

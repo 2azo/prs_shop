@@ -63,77 +63,79 @@
 </script>
 
 <li class="product-card">
-  <div class="image-container">
-    {#if currentImage}
-      <button
-        type="button"
-        class="image-button"
-        on:click={openLightbox}
-        aria-label="Bild vergrößern"
-      >
-        <img
-          src={currentImage.url}
-          alt={product.title}
-          class="product-image clickable"
-        />
-      </button>
-      {#if images.length > 1}
-        <button class="nav-btn prev" on:click={prevImage}>&lt;</button>
-        <button class="nav-btn next" on:click={nextImage}>&gt;</button>
-        <div class="dots">
-          {#each images as _, i}
-            <span class="dot" class:active={i === currentImageIndex}></span>
+  <div class="left-column">
+    <div class="image-container">
+      {#if currentImage}
+        <button
+          type="button"
+          class="image-button"
+          on:click={openLightbox}
+          aria-label="Bild vergrößern"
+        >
+          <img
+            src={currentImage.url}
+            alt={product.title}
+            class="product-image clickable"
+          />
+        </button>
+        {#if images.length > 1}
+          <button class="nav-btn prev" on:click={prevImage}>&lt;</button>
+          <button class="nav-btn next" on:click={nextImage}>&gt;</button>
+          <div class="dots">
+            {#each images as _, i}
+              <span class="dot" class:active={i === currentImageIndex}></span>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        <div class="no-image">No Image</div>
+      {/if}
+    </div>
+
+    <div class="variations-and-prices">
+      <div class="product-variants">
+        <h3>Variationen</h3>
+        <div class="variant-buttons">
+          {#each product.variants as variant}
+            <button
+              class="variant-btn {selectedVariantId === variant.id
+                ? 'selected-variant'
+                : ''}"
+              type="button"
+              on:click={() => handleClick(variant.id)}
+            >
+              <span class="variant-title">{variant.title}</span>
+              {#if variant.prices && variant.prices.length > 0}
+                <span class="variant-price">
+                  {variant.prices[0].amount / 100}
+                  {variant.prices[0].currency_code.toUpperCase()}
+                </span>
+              {/if}
+            </button>
           {/each}
         </div>
-      {/if}
-    {:else}
-      <div class="no-image">No Image</div>
-    {/if}
+      </div>
+
+      <div class="variant-price">
+        <h3>Preis:</h3>
+        {#if product.variants && product.variants.length > 0}
+          {#each product.variants as variant (variant.id)}
+            {#if selectedVariantId === variant.id}
+              <span>
+                {variant.calculated_price.calculated_amount}
+                {variant.calculated_price.currency_code.toUpperCase()}
+              </span>
+            {/if}
+          {/each}
+        {/if}
+      </div>
+    </div>
   </div>
 
   <div class="product-info">
     <h2 class="product-title">{product.title}</h2>
     <p class="product-description">{product.description}</p>
 
-    <div class="product-variants">
-      <h3>Variationen</h3>
-      <div class="variant-buttons">
-        {#each product.variants as variant}
-          <!-- if clicked, make it blue -->
-          <button
-            class="variant-btn {selectedVariantId === variant.id
-              ? 'selected-variant'
-              : ''}"
-            type="button"
-            on:click={() => handleClick(variant.id)}
-          >
-            <span class="variant-title">{variant.title}</span>
-            {#if variant.prices && variant.prices.length > 0}
-              <span class="variant-price">
-                {variant.prices[0].amount / 100}
-                {variant.prices[0].currency_code.toUpperCase()}
-              </span>
-            {/if}
-          </button>
-        {/each}
-      </div>
-    </div>
-
-    <div class="variant-price">
-      <h3>Preis:</h3>
-      {#if product.variants && product.variants.length > 0}
-        {#each product.variants as variant (variant.id)}
-          {#if selectedVariantId === variant.id}
-            <span>
-              {variant.calculated_price.calculated_amount}
-              {variant.calculated_price.currency_code.toUpperCase()}
-            </span>
-          {/if}
-        {/each}
-      {/if}
-    </div>
-
-    <!-- disable clicking if no variant is selected -->
     <div class="add-to-cart" class:disabled={!selectedVariantId}>
       <button
         disabled={!selectedVariantId}
@@ -226,11 +228,20 @@
       0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
+  .variations-and-prices {
+    margin: 1rem 0 0 0.5rem;
+  }
+
+  .left-column {
+    width: 50%;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
   .image-container {
     position: relative;
-    width: 50%;
-    /* min-height: 300px; */
-    flex-shrink: 0;
+    width: 100%;
     background-color: var(--light-grey);
     overflow: hidden;
     aspect-ratio: 3/2;
@@ -432,6 +443,8 @@
     margin-left: 0;
     margin-bottom: 0;
     min-height: 60px;
+    display: flex;
+    gap: 0.2rem;
   }
 
   /* Lightbox Styles */
@@ -546,5 +559,19 @@
 
   .lightbox-dot.active {
     background: white;
+  }
+
+  @media all and (max-width: 768px) {
+    .product-info {
+      width: 100%;
+      padding: 0;
+    }
+
+    .left-column {
+      width: 100%;
+    }
+    .product-card {
+      flex-direction: column;
+    }
   }
 </style>
