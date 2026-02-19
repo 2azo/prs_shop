@@ -447,7 +447,6 @@
     gap: 0.2rem;
   }
 
-  /* Lightbox Styles */
   .lightbox-backdrop {
     position: fixed;
     inset: 0;

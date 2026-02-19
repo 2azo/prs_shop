@@ -13,7 +13,6 @@
 
   // path to backend server - Medusa
   // const API_URL = "http://localhost:9000/";
-  // const API_URL = "https://prs-shop.martiniwerbeagentur.com/";
   const API_URL = "https://shop.prs-system.de/";
 
   // Stripe public key
@@ -40,22 +39,13 @@
   let showSuccessModal = false;
   let loading = false;
 
-  // let header: HTMLElement | null;
-
   /* 
   Checkout logic (+ Stripe) source: 
   https://docs.medusajs.com/resources/storefront-development/checkout/payment/stripe#3-create-stripe-component
   */
 
   onMount(async () => {
-    // header = document.getElementById("header");
-    // if (header) {
-    //   const rect = header.getBoundingClientRect();
-    //   const headerHeight = rect.height;
-    // }
-
     loading = true;
-    // console.log("onMount called");
 
     cartId = localStorage.getItem("cart_id");
     if (!cartId) {
@@ -471,7 +461,7 @@
     }
     console.log("Cart updated with checkout info, proceeding to payment...");
     // the cart is now updated with the checkout information
-    // proceed to create payment collection, and
+    // proceed to create payment collection
 
     await createPaymentCollection(cartId!);
     showPaymentModal = true;
@@ -487,7 +477,6 @@
     // source: https://docs.stripe.com/js/elements_object/create
     // "Use Element instances to collect sensitive information in your checkout flow."
 
-    // console.log("Client secret:", clientSecret);
     if (!elements)
       elements = stripe.elements({
         clientSecret: clientSecret!,
@@ -579,7 +568,6 @@
         showSuccessModal = true;
       } else {
         console.error(data);
-        // error.textContent = "Could not complete order.";
       }
     } catch (error: any) {
       console.error("Error completing cart:", error);
@@ -823,7 +811,6 @@
           <div id="card-element"></div>
 
           <p id="card-error" style="color:red;"></p>
-          <!-- <div id="payment-element"></div> -->
           <button id="pay-btn" type="submit" disabled={loading}
             >Place Order</button
           >
@@ -880,7 +867,6 @@
 </main>
 
 <style>
-  /*color variables */
   :root {
     --main-orange: #faa61a;
     --light-grey: #a5aeb4;
@@ -905,6 +891,7 @@
     margin-bottom: 3rem;
   }
 
+  /*
   .same-address-box {
     display: flex;
     align-items: center;
@@ -916,6 +903,7 @@
   .same-address-box label {
     margin: 0 !important;
   }
+*/
 
   .loading-backdrop {
     position: fixed;
@@ -1068,7 +1056,6 @@
     list-style: none;
     padding: 0;
     display: grid;
-    /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
     grid-template-columns: none;
     gap: 4rem;
     flex: 2;
