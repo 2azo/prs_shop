@@ -13,10 +13,12 @@
 
   // path to backend server - Medusa
   // const API_URL = "http://localhost:9000/";
-  const API_URL = "https://prs-shop.martiniwerbeagentur.com/";
+  // const API_URL = "https://prs-shop.martiniwerbeagentur.com/";
+  const API_URL = "https://shop.prs-system.de/";
 
   // Stripe public key
-  const STRIPE_PUBLIC_KEY = "";
+  const STRIPE_PUBLIC_KEY =
+    "pk_test_51SfcTAH64g2rqQEIE9m25Vxhc6SL0gVmLj2PA6ey4YWl7Z7UwWHppEj5IKTlFPzIIo16pfyY4aorxitR90AIONKL00WRp2jVqa";
 
   // admin email
   const ADMIN_EMAIL = "mouaz.allahham@martini-werbeagentur.de";
@@ -321,6 +323,7 @@
           // bodyData.billing_address.country = "Deutschland";
         } else {
           alert("Nur Deutschland wird unterstützt.");
+          return false;
         }
 
         bodyData.billing_address.company = billingAddress.companyName;
@@ -373,7 +376,7 @@
   let lastName: string = "";
   let email: string = "";
   let phone: string = "";
-  let sameAddress: boolean = true;
+  let sameAddress: boolean = true; // assuming for now that billing and shipping address are the same
 
   let billingAddress = {
     companyName: "",
@@ -423,8 +426,9 @@
       return;
     }
 
+    let updateResult;
     if (sameAddress) {
-      await updateCart({
+      updateResult = await updateCart({
         cartId: cartId,
         action: "update_addresses",
         billingAddress: {
@@ -438,7 +442,7 @@
         },
       });
     } else {
-      await updateCart({
+      updateResult = await updateCart({
         cartId: cartId,
         action: "update_addresses",
         billingAddress: {
@@ -458,6 +462,12 @@
           phone: shippingAddress.phone,
         },
       });
+    }
+
+    // Stop if updateCart returned false (e.g., invalid country)
+    if (updateResult === false) {
+      loading = false;
+      return;
     }
     console.log("Cart updated with checkout info, proceeding to payment...");
     // the cart is now updated with the checkout information
@@ -677,7 +687,7 @@
 
           <h3>Rechnungsadresse</h3>
 
-          <div class="same-address-box">
+          <!-- <div class="same-address-box">
             <label for="same-address"
               >Rechnungsadresse ist gleich wie Lieferadresse</label
             >
@@ -686,7 +696,7 @@
               id="same-address"
               bind:checked={sameAddress}
             />
-          </div>
+          </div> -->
 
           <label for="billing-company-name">Firmenname</label>
           <input
@@ -853,8 +863,7 @@
         </div>
         <h2>Danke für Ihre Bestellung!</h2>
         <p class="success-message">
-          Ihre Bestellung wurde erfolgreich aufgegeben. Sie erhalten in Kürze
-          eine Bestätigungs-E-Mail.
+          Ihre Bestellung wurde erfolgreich aufgegeben.
         </p>
         <button
           class="continue-btn"
@@ -976,7 +985,7 @@
     background: white;
     padding: 2rem;
     border-radius: 8px;
-    width: 400px;
+    width: 40rem;
     max-width: 90%;
     position: relative;
     overflow-y: auto;
@@ -1076,6 +1085,10 @@
     padding: 2.5rem 2rem;
   }
 
+  .success-modal h2 {
+    width: 100% !important;
+  }
+
   .success-icon {
     margin-bottom: 1.5rem;
     animation: scaleIn 0.3s ease-out;
@@ -1097,6 +1110,10 @@
     font-size: 1.5rem;
     margin-bottom: 1rem;
     font-weight: 600;
+  }
+
+  .success-modal h2::after {
+    width: 100% !important;
   }
 
   .success-message {
@@ -1143,6 +1160,12 @@
 
     .product-page {
       display: flex;
+      flex-direction: column;
+    }
+  }
+
+  @media all and (max-width: 1440px) {
+    .products-container {
       flex-direction: column;
     }
   }
